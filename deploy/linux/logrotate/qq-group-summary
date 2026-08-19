@@ -1,0 +1,8 @@
+/opt/qq-group-summary/logs/*.log {
+    daily
+    rotate 14
+    compress
+    missingok
+    notifempty
+    copytruncate
+}

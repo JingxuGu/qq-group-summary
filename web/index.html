@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#132a3a">
+  <title>QQ Group Summary</title><link rel="stylesheet" href="/ui/assets/styles.css"><script src="/ui/assets/app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+  <div class="shell">
+    <aside class="brand-rail" aria-label="Application navigation">
+      <div><div class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></div><p class="eyebrow">QQ GROUP SUMMARY</p><h1>Group chat, distilled.</h1><p class="brand-note">Listen quietly. Deliver what matters.</p>
+        <nav class="side-nav" aria-label="Main navigation">
+          <button class="nav-item active" data-view="dashboard">Dashboard</button><button class="nav-item" data-view="summaries">Summaries</button><button class="nav-item" data-view="messages">Messages</button><button class="nav-item" data-view="email">Email</button><button class="nav-item" data-view="qq">Connect QQ</button>
+        </nav>
+      </div>
+      <div class="clock-block"><span>LOCAL TIME</span><time id="clock">--:--:--</time></div>
+    </aside>
+    <main id="main">
+      <section id="view-dashboard" class="view active-view">
+        <header class="topbar"><div><p class="section-label">System overview</p><h2>Message watch desk</h2></div><div class="service-state" id="service-state" role="status"><span class="state-dot"></span><span>Connecting</span></div></header>
+        <section class="signal-track" aria-labelledby="signal-title"><div class="track-heading"><div><p class="section-label">Message track</p><h3 id="signal-title">From group chat to inbox</h3></div><p id="last-refresh">Waiting for first refresh</p></div><div class="track" role="list">
+          <article class="track-stop active" role="listitem"><span class="track-index">IN</span><strong id="metric-received">—</strong><small>MESSAGES · 24H</small></article><article class="track-stop" role="listitem"><span class="track-index">QUEUE</span><strong id="metric-pending">—</strong><small>WAITING TO SUMMARIZE</small></article><article class="track-stop" role="listitem"><span class="track-index">SUM</span><strong id="metric-summaries">—</strong><small>SUMMARY BATCHES · 24H</small></article><article class="track-stop" role="listitem"><span class="track-index">MAIL</span><strong id="metric-delivery">—</strong><small>LATEST DELIVERY</small></article>
+        </div></section>
+        <div class="content-grid"><section class="panel groups-panel" aria-labelledby="groups-title"><div class="panel-heading"><div><p class="section-label">Listening scope</p><h3 id="groups-title">QQ groups</h3></div><span class="count-badge" id="group-count">0 groups</span></div><div class="group-list" id="group-list"><p class="empty-state">Loading groups…</p></div></section><section class="panel delivery-panel" aria-labelledby="delivery-title"><div class="panel-heading"><div><p class="section-label">Delivery log</p><h3 id="delivery-title">Recent digests</h3></div><span class="pending-note" id="pending-note">0 notices pending</span></div><div class="delivery-list" id="delivery-list"><p class="empty-state">No delivery records yet.</p></div></section></div>
+      </section>
+
+      <section id="view-summaries" class="view" hidden><header class="topbar"><div><p class="section-label">Saved knowledge</p><h2>Summary archive</h2></div><select id="summary-filter" aria-label="Filter summaries"><option value="">All group types</option><option value="course">Course</option><option value="academic">Academic</option><option value="casual">Casual</option></select></header><div id="summary-list" class="summary-list"><p class="empty-state">Loading summaries…</p></div></section>
+
+      <section id="view-messages" class="view" hidden><header class="topbar"><div><p class="section-label">Local database</p><h2>Message history</h2></div><span class="privacy-note">Raw messages stay on this device</span></header><form id="message-search" class="search-bar"><label><span class="sr-only">Search messages</span><input id="message-query" type="search" placeholder="Search message text or sender"></label><button class="primary-button" type="submit">Search</button></form><div class="message-table-wrap"><table class="message-table"><thead><tr><th>Time</th><th>Group</th><th>Sender</th><th>Message</th><th>State</th></tr></thead><tbody id="message-list"></tbody></table></div><div class="pager"><span id="message-count">0 messages</span><div><button id="messages-prev" class="secondary-button" type="button">Previous</button><button id="messages-next" class="secondary-button" type="button">Next</button></div></div></section>
+
+      <section id="view-email" class="view" hidden><header class="topbar"><div><p class="section-label">Subscription</p><h2>Daily email</h2></div></header><form id="email-form" class="preference-card"><div class="preference-copy"><p class="step-kicker">Your delivery</p><h3>Choose where and when the digest arrives</h3><p>The SMTP server and credentials remain developer-managed. This page only changes your recipient address and delivery time.</p></div><div class="form-grid"><label><span>Recipient email</span><input id="subscription-email" type="email" required></label><label><span>Daily delivery time</span><input id="subscription-time" type="time" required><small>Uses the timezone configured by the developer</small></label></div><div class="preference-actions"><p id="email-message" role="status"></p><button class="primary-button" type="submit">Save subscription</button></div></form></section>
+
+      <section id="view-qq" class="view" hidden><header class="topbar"><div><p class="section-label">Account connection</p><h2>Connect your QQ account</h2></div></header><div class="qq-connect-card"><div class="qq-signal" id="qq-signal" aria-hidden="true"><span></span></div><div><p class="step-kicker">NapCat connection</p><h3 id="qq-title">QQ is not connected</h3><p id="qq-description">Open the local NapCat login page, scan the QR code with QQ, then return here. Connection status refreshes automatically.</p><a id="qq-login-link" class="primary-link" href="#" target="_blank" rel="noopener">Open QQ login</a><button id="qq-refresh" class="text-button" type="button">Refresh connection status</button></div></div><aside class="account-note"><strong>Read-only by design</strong><p>QQ Group Summary listens to configured groups. It does not reply, send group messages, add friends, or mark chats as read.</p></aside></section>
+
+      <footer><span>Local-first dashboard · SQLite stays on this device</span><a href="/docs">API documentation</a></footer>
+    </main>
+  </div>
+  <template id="group-template"><article class="group-row"><span class="group-type"></span><div class="group-main"><strong></strong><small></small></div><div class="group-number"><strong></strong><small>MESSAGES</small></div><span class="group-pending"></span></article></template>
+  <template id="delivery-template"><article class="delivery-row"><span class="delivery-status"></span><div><strong></strong><small></small></div></article></template>
+  <template id="summary-template"><article class="summary-card"><header><div><span class="summary-type"></span><h3></h3></div><time></time></header><div class="summary-content"></div><footer></footer></article></template>
+</body>
+</html>
