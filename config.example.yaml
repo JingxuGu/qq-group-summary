@@ -1,3 +1,4 @@
+# Template only. The startup script copies this to config.yaml; keep real settings out of this file.
 app:
   timezone: Asia/Shanghai
   daily_email_time: "22:30"

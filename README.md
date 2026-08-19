@@ -31,6 +31,8 @@ NapCat / QQ → OneBot → Koishi → http://127.0.0.1:8765 → Python → SQLit
 
 数据库会自动创建，YAML 中的群配置会在每次启动时同步到 SQLite。
 
+> 安全提示：仓库中的 `config.example.yaml` 和 `.env.example` 只是无密钥模板，不要把真实配置写进这两个文件。实际使用的 `config.yaml`、`.env` 及其本地变体均已加入 `.gitignore`，不会被 Git 提交。
+
 ## WebUI
 
 WebUI 全部使用英文，默认只允许本机访问：
