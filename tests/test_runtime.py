@@ -12,6 +12,6 @@ def test_runtime_builds_database_and_persists_retention_setting(tmp_path, monkey
     runtime = build_runtime(tmp_path / "config.yaml")
     assert runtime.database.path == (tmp_path / "data" / "qq_summary.db").resolve()
     assert runtime.database.get_setting("raw_message_retention_days") == "14"
-    assert len(runtime.database.configured_groups()) == 1
+    assert len(runtime.database.configured_groups()) == 0
     assert runtime.scheduler.running is False
     assert runtime.app.title == "QQ Group Summary"

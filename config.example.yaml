@@ -28,6 +28,15 @@ summary_policy:
   academic: {max_messages: 400, idle_minutes: 60, max_window_hours: 4}
   course: {max_messages: 150, idle_minutes: 30, max_window_hours: 2}
   casual: {max_messages: 500, idle_minutes: 90, max_window_hours: 6}
+email:
+  provider: mailjet
+  default_to_address: you@example.com
+mailjet:
+  api_base_url: https://api.mailjet.com/v3.1
+  from_address: verified-sender@example.com
+  from_name: QQ Group Summary
+  reply_to_address: ""
+# Optional fallback. Change email.provider to smtp to use it.
 smtp:
   host: smtp.example.com
   port: 465
@@ -35,7 +44,3 @@ smtp:
   starttls: false
   from_address: you@example.com
   to_address: you@example.com
-groups:
-  - id: "123456789"
-    name: 机器人学课程群
-    type: course

@@ -14,5 +14,7 @@ htmlcov/
 data/*.db
 data/*.db-*
 logs/
+*.log
 koishi/node_modules/
 koishi/lib/
+deploy/astralgocq/

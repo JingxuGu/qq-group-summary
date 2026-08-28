@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import sqlite3
 from contextlib import contextmanager
@@ -11,7 +12,7 @@ from app.config import GroupConfig
 from app.models import GroupType, IncomingMessage, IngestResult, NormalizedMessage, StoredMessage
 
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 3
 
 
 class Database:
@@ -71,6 +72,20 @@ class Database:
                     error_message TEXT,
                     created_at TEXT NOT NULL
                 );
+                CREATE TABLE IF NOT EXISTS mail_events (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    event_key TEXT NOT NULL UNIQUE,
+                    provider TEXT NOT NULL,
+                    event_type TEXT NOT NULL,
+                    event_time TEXT,
+                    recipient TEXT,
+                    message_id TEXT,
+                    delivery_key TEXT,
+                    payload_json TEXT NOT NULL,
+                    created_at TEXT NOT NULL
+                );
+                CREATE INDEX IF NOT EXISTS idx_mail_events_delivery
+                    ON mail_events(delivery_key, event_time);
                 CREATE TABLE IF NOT EXISTS summary_batches (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     group_id INTEGER NOT NULL REFERENCES groups(id),
@@ -130,10 +145,94 @@ class Database:
                 );
                 """
             )
+            group_columns = {row[1] for row in db.execute("PRAGMA table_info(groups)").fetchall()}
+            if "last_message_at" not in group_columns:
+                db.execute("ALTER TABLE groups ADD COLUMN last_message_at TEXT")
+            if "available" not in group_columns:
+                db.execute("ALTER TABLE groups ADD COLUMN available INTEGER NOT NULL DEFAULT 0")
             db.execute(
                 "INSERT OR IGNORE INTO schema_migrations(version, applied_at) VALUES (?, ?)",
                 (SCHEMA_VERSION, _utc_now()),
             )
+
+    def sync_available_groups(self, groups: Sequence[dict[str, str | None]]) -> None:
+        """Upsert the QQ account's group catalog without changing user subscriptions."""
+        now = _utc_now()
+        with self.transaction() as db:
+            db.execute("UPDATE groups SET available=0,updated_at=? WHERE available=1", (now,))
+            for group in groups:
+                qq_group_id = str(group["qq_group_id"])
+                name = str(group.get("name") or qq_group_id)
+                last_message_at = group.get("last_message_at")
+                db.execute(
+                    """
+                    INSERT INTO groups(
+                      qq_group_id,name,type,enabled,last_message_at,available,created_at,updated_at
+                    ) VALUES(?,?,'casual',0,?,1,?,?)
+                    ON CONFLICT(qq_group_id) DO UPDATE SET
+                      name=excluded.name,
+                      last_message_at=COALESCE(excluded.last_message_at,groups.last_message_at),
+                      available=1,
+                      updated_at=excluded.updated_at
+                    """,
+                    (qq_group_id, name, last_message_at, now, now),
+                )
+
+    def record_group_activity(self, qq_group_id: str, name: str, occurred_at: datetime) -> bool:
+        """Record metadata for sorting without storing content from unsubscribed groups."""
+        now = _utc_now()
+        occurred = _iso(occurred_at)
+        with self.transaction() as db:
+            db.execute(
+                """
+                INSERT INTO groups(
+                  qq_group_id,name,type,enabled,last_message_at,available,created_at,updated_at
+                ) VALUES(?,?,'casual',0,?,1,?,?)
+                ON CONFLICT(qq_group_id) DO UPDATE SET
+                  name=CASE
+                    WHEN excluded.name=excluded.qq_group_id THEN groups.name
+                    ELSE excluded.name
+                  END,
+                  last_message_at=excluded.last_message_at,
+                  available=1,
+                  updated_at=excluded.updated_at
+                """,
+                (qq_group_id, name or qq_group_id, occurred, now, now),
+            )
+            row = db.execute(
+                "SELECT enabled FROM groups WHERE qq_group_id=?", (qq_group_id,)
+            ).fetchone()
+        return bool(row["enabled"])
+
+    def available_groups(self) -> list[dict[str, object]]:
+        with self.connect() as db:
+            rows = db.execute(
+                """
+                SELECT qq_group_id,name,type,enabled,last_message_at
+                FROM groups WHERE available=1
+                ORDER BY last_message_at IS NULL,last_message_at DESC,name COLLATE NOCASE,qq_group_id
+                """
+            ).fetchall()
+        return [dict(row) | {"enabled": bool(row["enabled"])} for row in rows]
+
+    def replace_group_subscriptions(self, groups: Sequence[tuple[str, GroupType]]) -> None:
+        ids = [group_id for group_id, _ in groups]
+        if len(ids) != len(set(ids)):
+            raise ValueError("group ids must be unique")
+        with self.transaction() as db:
+            if ids:
+                placeholders = ",".join("?" for _ in ids)
+                found = int(db.execute(
+                    f"SELECT count(*) FROM groups WHERE available=1 AND qq_group_id IN ({placeholders})", ids
+                ).fetchone()[0])
+                if found != len(ids):
+                    raise UnknownGroupError("one or more groups are unavailable")
+            db.execute("UPDATE groups SET enabled=0,updated_at=? WHERE enabled=1", (_utc_now(),))
+            for qq_group_id, group_type in groups:
+                db.execute(
+                    "UPDATE groups SET enabled=1,type=?,updated_at=? WHERE qq_group_id=?",
+                    (group_type.value, _utc_now(), qq_group_id),
+                )
 
     def sync_groups(self, groups: Sequence[GroupConfig]) -> None:
         now = _utc_now()
@@ -141,12 +240,12 @@ class Database:
             for group in groups:
                 db.execute(
                     """
-                    INSERT INTO groups(qq_group_id,name,type,enabled,max_messages,idle_minutes,max_window_hours,created_at,updated_at)
-                    VALUES(?,?,?,?,?,?,?,?,?)
+                    INSERT INTO groups(qq_group_id,name,type,enabled,max_messages,idle_minutes,max_window_hours,available,created_at,updated_at)
+                    VALUES(?,?,?,?,?,?,?,1,?,?)
                     ON CONFLICT(qq_group_id) DO UPDATE SET
                       name=excluded.name,type=excluded.type,enabled=excluded.enabled,
                       max_messages=excluded.max_messages,idle_minutes=excluded.idle_minutes,
-                      max_window_hours=excluded.max_window_hours,updated_at=excluded.updated_at
+                      max_window_hours=excluded.max_window_hours,available=1,updated_at=excluded.updated_at
                     """,
                     (group.id, group.name, group.type.value, int(group.enabled), group.max_messages,
                      group.idle_minutes, group.max_window_hours, now, now),
@@ -194,7 +293,7 @@ class Database:
 
     def configured_groups(self) -> list[sqlite3.Row]:
         with self.connect() as db:
-            return list(db.execute("SELECT * FROM groups WHERE enabled=1 ORDER BY id").fetchall())
+            return list(db.execute("SELECT * FROM groups WHERE enabled=1 AND available=1 ORDER BY id").fetchall())
 
     def get_group(self, group_id: int) -> sqlite3.Row:
         with self.connect() as db:
@@ -436,6 +535,28 @@ class Database:
             ).fetchall()
         return [dict(row) for row in rows], total
 
+    def message_groups(self, *, query: str | None = None) -> list[dict[str, object]]:
+        clauses = ["1=1"]
+        parameters: list[object] = []
+        if query:
+            clauses.append("(m.text LIKE ? OR m.sender_name LIKE ?)")
+            pattern = f"%{query}%"
+            parameters.extend([pattern, pattern])
+        where = " AND ".join(clauses)
+        with self.connect() as db:
+            rows = db.execute(
+                f"""
+                SELECT g.qq_group_id,g.name,g.type,COUNT(*) AS message_count,
+                       MAX(m.sent_at) AS latest_message_at
+                FROM messages m JOIN groups g ON g.id=m.group_id
+                WHERE {where}
+                GROUP BY g.id,g.qq_group_id,g.name,g.type
+                ORDER BY latest_message_at DESC,g.name COLLATE NOCASE,g.qq_group_id
+                """,
+                parameters,
+            ).fetchall()
+        return [dict(row) for row in rows]
+
     def create_delivery(self, *, delivery_key: str, window_start: str | None, window_end: str, subject: str) -> int:
         with self.transaction() as db:
             cursor = db.execute(
@@ -446,6 +567,33 @@ class Database:
                 (delivery_key, window_start, window_end, subject, _utc_now()),
             )
             return int(cursor.lastrowid)
+
+    def record_mailjet_events(self, events: Sequence[dict[str, object]]) -> int:
+        inserted = 0
+        with self.transaction() as db:
+            for event in events:
+                payload = json.dumps(event, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+                event_key = hashlib.sha256(payload.encode("utf-8")).hexdigest()
+                cursor = db.execute(
+                    """
+                    INSERT OR IGNORE INTO mail_events(
+                      event_key,provider,event_type,event_time,recipient,message_id,
+                      delivery_key,payload_json,created_at
+                    ) VALUES(?,'mailjet',?,?,?,?,?,?,?)
+                    """,
+                    (
+                        event_key,
+                        str(event.get("event") or "unknown"),
+                        str(event.get("time") or ""),
+                        str(event.get("email") or ""),
+                        str(event.get("MessageID") or event.get("Message_GUID") or ""),
+                        str(event.get("CustomID") or event.get("customcampaign") or ""),
+                        payload,
+                        _utc_now(),
+                    ),
+                )
+                inserted += max(cursor.rowcount, 0)
+        return inserted
 
     def fail_delivery(self, delivery_id: int, error_message: str) -> None:
         with self.transaction() as db:
@@ -520,7 +668,7 @@ class Database:
                   max(m.sent_at) AS last_message_at
                 FROM groups g
                 LEFT JOIN messages m ON m.group_id=g.id AND m.received_at >= datetime('now','-24 hours')
-                WHERE g.enabled=1
+                WHERE g.enabled=1 AND g.available=1
                 GROUP BY g.id ORDER BY g.type,g.name
                 """
             ).fetchall())

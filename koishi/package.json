@@ -1,12 +1,27 @@
 {
   "name": "koishi-plugin-qq-group-summary-forwarder",
   "version": "0.1.0",
+  "private": true,
   "description": "Read-only QQ group message forwarder for QQ Group Summary",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
-  "files": ["lib"],
-  "scripts": {"build": "tsc -p tsconfig.json", "check": "tsc -p tsconfig.json --noEmit"},
-  "peerDependencies": {"koishi": "^4.18.0"},
-  "devDependencies": {"koishi": "^4.18.0", "typescript": "^5.7.0"},
-  "koishi": {"description": {"en": "Forward selected QQ group messages to QQ Group Summary"}}
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "check": "tsc -p tsconfig.json --noEmit",
+    "start": "node --env-file=../.env lib/runtime.js"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0"
+  },
+  "koishi": {
+    "description": {
+      "en": "Forward selected QQ group messages to QQ Group Summary"
+    }
+  },
+  "dependencies": {
+    "@koishijs/plugin-http": "0.6.3",
+    "koishi": "4.18.11",
+    "koishi-plugin-adapter-onebot": "6.9.4"
+  }
 }

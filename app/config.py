@@ -50,6 +50,14 @@ class SMTPConfig:
 
 
 @dataclass(frozen=True, slots=True)
+class MailjetConfig:
+    api_base_url: str = "https://api.mailjet.com/v3.1"
+    from_address: str = ""
+    from_name: str = "QQ Group Summary"
+    reply_to_address: str = ""
+
+
+@dataclass(frozen=True, slots=True)
 class AppConfig:
     timezone: str
     daily_email_time: str
@@ -67,6 +75,10 @@ class AppConfig:
     smtp: SMTPConfig
     ingest_token: str = field(repr=False)
     env: dict[str, str] = field(repr=False)
+    napcat_webui_token: str = field(default="", repr=False)
+    email_provider: str = "smtp"
+    email_default_to_address: str = ""
+    mailjet: MailjetConfig = field(default_factory=MailjetConfig)
 
     @property
     def tzinfo(self) -> ZoneInfo:
@@ -82,6 +94,22 @@ class AppConfig:
     @property
     def smtp_password(self) -> str:
         return self.env.get("SMTP_PASSWORD", "")
+
+    @property
+    def mailjet_api_key(self) -> str:
+        return self.env.get("MAILJET_API_KEY", "")
+
+    @property
+    def mailjet_secret_key(self) -> str:
+        return self.env.get("MAILJET_SECRET_KEY", "")
+
+    @property
+    def mailjet_webhook_username(self) -> str:
+        return self.env.get("MAILJET_WEBHOOK_USERNAME", "")
+
+    @property
+    def mailjet_webhook_password(self) -> str:
+        return self.env.get("MAILJET_WEBHOOK_PASSWORD", "")
 
 
 def _required(mapping: dict[str, Any], key: str) -> Any:
@@ -116,6 +144,8 @@ def load_config(path: str | Path = "config.yaml", *, env: dict[str, str] | None 
     storage = raw.get("storage", {})
     logging_raw = raw.get("logging", {})
     llm = raw.get("llm", {})
+    email_raw = raw.get("email", {})
+    mailjet_raw = raw.get("mailjet", {})
     smtp_raw = raw.get("smtp", {})
     timezone_name = str(app.get("timezone", "Asia/Shanghai"))
     ZoneInfo(timezone_name)
@@ -151,12 +181,21 @@ def load_config(path: str | Path = "config.yaml", *, env: dict[str, str] | None 
         raise ValueError("MESSAGE_INGEST_TOKEN is required")
 
     fallback_raw = llm.get("fallback")
+    email_provider = str(email_raw.get("provider", "smtp")).strip().lower()
+    if email_provider not in {"mailjet", "smtp"}:
+        raise ValueError("email.provider must be mailjet or smtp")
+    if email_provider == "smtp":
+        for key in ("host", "from_address", "to_address"):
+            _required(smtp_raw, key)
+    else:
+        _required(mailjet_raw, "from_address")
     return AppConfig(
         timezone=timezone_name,
         daily_email_time=str(app.get("daily_email_time", "22:30")),
         host=str(app.get("host", "127.0.0.1")),
         port=int(app.get("port", 8765)),
         napcat_webui_url=str(app.get("napcat_webui_url", "http://127.0.0.1:6099/webui")),
+        napcat_webui_token=values.get("NAPCAT_WEBUI_TOKEN", ""),
         database=_resolve(config_path.parent, str(storage.get("database", "./data/qq_summary.db"))),
         raw_message_retention_days=int(storage.get("raw_message_retention_days", 14)),
         log_directory=_resolve(config_path.parent, str(logging_raw.get("directory", "./logs"))),
@@ -166,13 +205,23 @@ def load_config(path: str | Path = "config.yaml", *, env: dict[str, str] | None 
         summary_policies=policies,
         groups=groups,
         smtp=SMTPConfig(
-            host=str(_required(smtp_raw, "host")),
+            host=str(smtp_raw.get("host", "")),
             port=int(smtp_raw.get("port", 465)),
             use_ssl=bool(smtp_raw.get("use_ssl", True)),
             starttls=bool(smtp_raw.get("starttls", False)),
-            from_address=str(_required(smtp_raw, "from_address")),
-            to_address=str(_required(smtp_raw, "to_address")),
+            from_address=str(smtp_raw.get("from_address", "")),
+            to_address=str(smtp_raw.get("to_address", "")),
         ),
         ingest_token=ingest_token,
         env=values,
+        email_provider=email_provider,
+        email_default_to_address=str(
+            email_raw.get("default_to_address", smtp_raw.get("to_address", ""))
+        ),
+        mailjet=MailjetConfig(
+            api_base_url=str(mailjet_raw.get("api_base_url", "https://api.mailjet.com/v3.1")),
+            from_address=str(mailjet_raw.get("from_address", "")),
+            from_name=str(mailjet_raw.get("from_name", "QQ Group Summary")),
+            reply_to_address=str(mailjet_raw.get("reply_to_address", "")),
+        ),
     )

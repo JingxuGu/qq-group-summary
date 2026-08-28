@@ -58,7 +58,7 @@ SQLite
 ↓
 Qwen / GLM API
 ↓
-SMTP
+Mailjet Send API（SMTP 备用）
 ↓
 你的邮箱
 ```
@@ -67,7 +67,7 @@ Python 负责数据清洗、数据库读写、LLM API、阶段摘要、日报、
 
 建议 Python 依赖以 `httpx`、`SQLAlchemy` 或标准库 `sqlite3`、`APScheduler`、`python-dotenv`、`PyYAML` 为主。初学阶段可先用标准库 `sqlite3`，等理解数据库后再决定是否引入 ORM。
 
-第一版数据库使用 SQLite，不使用 PostgreSQL、MongoDB、Redis。第一版定时任务使用 APScheduler。邮件使用 SMTP。服务端使用 Git 管理代码，部署在 Galaxy A9 Star 的 Debian ARM64 chroot 中。
+第一版数据库使用 SQLite，不使用 PostgreSQL、MongoDB、Redis。第一版定时任务使用 APScheduler。邮件默认使用 Mailjet Send API v3.1，并保留 SMTP 备用通道。服务端使用 Git 管理代码，部署在 Galaxy A9 Star 的 Debian ARM64 chroot 中。
 
 ## 4. 各组件职责
 
@@ -163,7 +163,7 @@ llm:
 
 ## 6. 群类型
 
-第一版每个群必须配置为：
+第一版每个被用户选中的群必须指定为：
 
 ```text
 course    课程群
@@ -171,20 +171,7 @@ academic  学术群
 casual    闲聊群
 ```
 
-例如：
-
-```yaml
-groups:
-  - id: "123456789"
-    name: "机器人学课程群"
-    type: course
-  - id: "234567890"
-    name: "VLA 学术讨论群"
-    type: academic
-  - id: "345678901"
-    name: "同学闲聊群"
-    type: casual
-```
+连接 QQ 后，Koishi 自动同步该账号的全部群列表。WebUI 按服务连接后观测到的最近消息时间倒序展示群组，用户勾选需要总结的群，并在界面中指定 `course`、`academic` 或 `casual`。群订阅和类型保存在 SQLite，不写入 `config.yaml`。未订阅群只同步群名、群号和活动时间，不保存消息内容。
 
 ## 7. 三类群的处理方式
 
@@ -279,7 +266,7 @@ SQLite 原始消息
 ↓
 组装一封日报
 ↓
-SMTP
+Mailjet Send API（SMTP 备用）
 ↓
 发送成功后推进 delivery cursor
 ```
@@ -294,6 +281,8 @@ qq_group_id
 name
 type
 enabled
+available
+last_message_at
 max_messages
 idle_minutes
 max_window_hours
@@ -469,8 +458,10 @@ API key 和邮箱密码不要写入 YAML。使用 `.env`：
 ```text
 QWEN_API_KEY=...
 GLM_API_KEY=...
-SMTP_USERNAME=...
-SMTP_PASSWORD=...
+MAILJET_API_KEY=...
+MAILJET_SECRET_KEY=...
+MAILJET_WEBHOOK_USERNAME=...
+MAILJET_WEBHOOK_PASSWORD=...
 ```
 
 并把 `.env` 加入 `.gitignore`。
@@ -513,7 +504,7 @@ qq-daily/
 
 第四阶段实现阶段总结三条件触发，先使用数据库假消息，不接真实 QQ。
 
-第五阶段实现 SMTP，先给自己发送 Hello World，再发送模拟日报。
+第五阶段实现 Mailjet Send API，先给自己发送订阅确认邮件，再发送模拟日报；SMTP 仅作为备用通道。
 
 第六阶段实现日报发送游标，验证“成功推进、失败不推进”。
 
@@ -555,13 +546,13 @@ Koishi / OneBot
 
 闲聊测试要在大量“哈哈、+1、表情、收到”中夹一条真正重要信息，预期邮件突出重要内容。
 
-还要人为填写错误 API key 和错误 SMTP 密码，验证模型失败不丢原始消息、邮件失败不推进发送游标。
+还要人为填写错误 LLM API key 和错误 Mailjet Secret Key，验证模型失败不丢原始消息、邮件失败不推进发送游标。
 
 ## 23. 日志与安全
 
 至少记录程序启动、QQ 连接、收到消息数量、阶段总结触发、模型调用、日报生成、邮件发送和数据清理。
 
-日志中不要打印 API key、SMTP 密码、Cookie 或 QQ 登录凭证。
+日志中不要打印 API key、Mailjet Secret Key、Webhook 密码、Cookie 或 QQ 登录凭证。
 
 QQ 侧第一版保持只读，避免自动回复、群发、加好友、加群、撤回和批量已读。
 

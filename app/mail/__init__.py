@@ -1,2 +1,1 @@
-"""SMTP delivery."""
-
+"""Provider-independent transactional email delivery."""

@@ -36,11 +36,12 @@ groups:
 def test_config_resolves_paths_relative_to_config_file(tmp_path):
     path = tmp_path / "config.yaml"
     write_config(path)
-    config = load_config(path, env={"MESSAGE_INGEST_TOKEN": "ingest-secret-value", "QWEN_API_KEY": "llm-secret-value"})
+    config = load_config(path, env={"MESSAGE_INGEST_TOKEN": "ingest-secret-value", "QWEN_API_KEY": "llm-secret-value", "NAPCAT_WEBUI_TOKEN": "webui-secret-value"})
     assert config.database == (tmp_path / "data" / "test.db").resolve()
     assert config.groups[0].type is GroupType.COURSE
     assert "ingest-secret-value" not in repr(config)
     assert "llm-secret-value" not in repr(config)
+    assert "webui-secret-value" not in repr(config)
 
 
 def test_ingest_token_is_required(tmp_path):
@@ -48,3 +49,30 @@ def test_ingest_token_is_required(tmp_path):
     write_config(path)
     with pytest.raises(ValueError, match="MESSAGE_INGEST_TOKEN"):
         load_config(path, env={})
+
+
+def test_mailjet_provider_reads_api_credentials_from_environment(tmp_path):
+    path = tmp_path / "config.yaml"
+    write_config(path)
+    content = path.read_text(encoding="utf-8")
+    content = content.replace(
+        "smtp:\n",
+        "email:\n  provider: mailjet\n  default_to_address: reader@example.com\n"
+        "mailjet:\n  from_address: sender@example.com\n  from_name: QQ Group Summary\n"
+        "smtp:\n",
+    )
+    path.write_text(content, encoding="utf-8")
+    config = load_config(
+        path,
+        env={
+            "MESSAGE_INGEST_TOKEN": "ingest-secret",
+            "QWEN_API_KEY": "llm-secret",
+            "MAILJET_API_KEY": "mailjet-public",
+            "MAILJET_SECRET_KEY": "mailjet-private",
+        },
+    )
+    assert config.email_provider == "mailjet"
+    assert config.email_default_to_address == "reader@example.com"
+    assert config.mailjet.from_address == "sender@example.com"
+    assert config.mailjet_api_key == "mailjet-public"
+    assert "mailjet-private" not in repr(config)

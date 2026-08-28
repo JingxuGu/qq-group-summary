@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 
 from app.config import AppConfig
 from app.digest.renderer import render_digest
-from app.mail.smtp_sender import MailSender
+from app.mail.sender import MailSender
 from app.storage.database import Database
 from app.summarizer.service import SummaryService
 
@@ -42,7 +42,10 @@ class DigestService:
             delivery_key=delivery_key, window_start=window_start, window_end=window_end, subject=subject
         )
         try:
-            recipient = self.database.get_setting("subscription_email") or self.config.smtp.to_address
+            default_recipient = getattr(
+                self.config, "email_default_to_address", self.config.smtp.to_address
+            )
+            recipient = self.database.get_setting("subscription_email") or default_recipient
             await asyncio.to_thread(
                 self.mailer.send, subject=subject, text=rendered.text, html=rendered.html,
                 delivery_key=delivery_key, to_address=recipient,
