@@ -40,23 +40,44 @@ function renderSummaries(items) {
 }
 async function loadSummaries() { const type = $('summary-filter').value; const query = type ? `?group_type=${encodeURIComponent(type)}` : ''; const response = await fetch(`/api/v1/summaries${query}`, { cache: 'no-store' }); const data = await response.json(); renderSummaries(data.items || []) }
 
-function renderMessageGroup(group, history) {
+async function loadMessageGroupHistory(card, group, query) {
+  const thread = card.querySelector('.message-thread')
+  const footer = card.querySelector('footer')
+  thread.replaceChildren()
+  footer.textContent = 'Loading saved history…'
+  try {
+    const params = new URLSearchParams({ group_id: group.qq_group_id, limit: '200', offset: '0' })
+    if (query) params.set('q', query)
+    const response = await fetch(`/api/v1/messages?${params}`, { cache: 'no-store' })
+    if (!response.ok) throw new Error(`Could not load ${group.name}`)
+    const history = await response.json()
+    for (const item of history.items) {
+      const row = document.createElement('li'); row.className = 'message-entry'
+      const rail = document.createElement('time'); rail.dateTime = item.sent_at; rail.textContent = formatTime(item.sent_at)
+      const content = document.createElement('div'); content.className = 'message-entry-content'
+      const meta = document.createElement('div'); meta.className = 'message-entry-meta'
+      const sender = document.createElement('strong'); sender.textContent = item.sender_name
+      const state = document.createElement('span'); state.textContent = item.summary_batch_id ? 'Summarized' : item.is_noise ? 'Filtered' : 'Pending'; state.className = `message-state ${state.textContent.toLowerCase()}`
+      const body = document.createElement('p'); body.textContent = item.text || item.attachment_title || `[${item.message_type}]`
+      meta.append(sender, state); content.append(meta, body); row.append(rail, content); thread.append(row)
+    }
+    footer.textContent = history.total > history.items.length ? `Showing the newest ${history.items.length} of ${history.total} messages` : `Complete saved history · ${history.total} messages`
+    card.dataset.loaded = 'true'
+  } catch (error) {
+    footer.textContent = `${error.message}. Close and reopen this group to try again.`
+  }
+}
+
+function renderMessageGroup(group, query) {
   const card = $('message-group-template').content.firstElementChild.cloneNode(true)
   const type = card.querySelector('.message-group-type'); type.textContent = typeLabels[group.type] || group.type; type.classList.add(group.type)
   card.querySelector('h2').textContent = group.name; card.querySelector('.message-group-count strong').textContent = group.message_count
-  const scroll = card.querySelector('.message-scroll'); scroll.setAttribute('aria-label', `${group.name} message history`)
-  const thread = card.querySelector('.message-thread')
-  for (const item of history.items) {
-    const row = document.createElement('li'); row.className = 'message-entry'
-    const rail = document.createElement('time'); rail.dateTime = item.sent_at; rail.textContent = formatTime(item.sent_at)
-    const content = document.createElement('div'); content.className = 'message-entry-content'
-    const meta = document.createElement('div'); meta.className = 'message-entry-meta'
-    const sender = document.createElement('strong'); sender.textContent = item.sender_name
-    const state = document.createElement('span'); state.textContent = item.summary_batch_id ? 'Summarized' : item.is_noise ? 'Filtered' : 'Pending'; state.className = `message-state ${state.textContent.toLowerCase()}`
-    const body = document.createElement('p'); body.textContent = item.text || item.attachment_title || `[${item.message_type}]`
-    meta.append(sender, state); content.append(meta, body); row.append(rail, content); thread.append(row)
-  }
-  card.querySelector('footer').textContent = history.total > history.items.length ? `Showing the newest ${history.items.length} of ${history.total} messages` : `Complete saved history · ${history.total} messages`
+  card.querySelector('.message-scroll').setAttribute('aria-label', `${group.name} message history`)
+  card.querySelector('.message-group-summary').setAttribute('aria-label', `${group.name}, ${group.message_count} messages`)
+  card.addEventListener('toggle', async () => {
+    card.querySelector('.message-toggle-label').textContent = card.open ? 'Close log' : 'Open log'
+    if (card.open && card.dataset.loaded !== 'true') await loadMessageGroupHistory(card, group, query)
+  })
   return card
 }
 async function loadMessages() {
@@ -65,10 +86,9 @@ async function loadMessages() {
     const groupParams = new URLSearchParams(); if (q) groupParams.set('q', q)
     const groupResponse = await fetch(`/api/v1/messages/groups?${groupParams}`, { cache: 'no-store' }); if (!groupResponse.ok) throw new Error('Could not load message groups')
     const groups = (await groupResponse.json()).items || []
-    const histories = await Promise.all(groups.map(async (group) => { const params = new URLSearchParams({ group_id: group.qq_group_id, limit: '200', offset: '0' }); if (q) params.set('q', q); const response = await fetch(`/api/v1/messages?${params}`, { cache: 'no-store' }); if (!response.ok) throw new Error(`Could not load ${group.name}`); return response.json() }))
     board.replaceChildren(); const total = groups.reduce((sum, group) => sum + group.message_count, 0); $('message-count').textContent = `${total} ${total === 1 ? 'message' : 'messages'}`
     if (!groups.length) return empty(board, q ? 'No messages match this search.' : 'No saved messages yet. Select a group and let new messages arrive.')
-    groups.forEach((group, index) => board.append(renderMessageGroup(group, histories[index])))
+    groups.forEach((group) => board.append(renderMessageGroup(group, q)))
   } catch (error) { $('message-count').textContent = 'Unavailable'; empty(board, error.message) }
 }
 

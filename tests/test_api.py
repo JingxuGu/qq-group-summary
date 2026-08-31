@@ -321,6 +321,8 @@ async def test_web_ui_is_user_facing_and_has_no_developer_config_endpoint(tmp_pa
     assert page.status_code == 200
     assert "Connect your QQ account" in page.text
     assert "Show login QR" in page.text
+    assert '<details class="message-group-card">' in page.text
+    assert "Open this group to load its saved history" in page.text
     assert "NapCat" not in page.text
     assert "API key" not in page.text
     assert page.headers["cache-control"] == "no-store"

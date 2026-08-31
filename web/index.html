@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#102c4c">
   <title>QQ Group Summary · Signal Desk</title>
-  <link rel="stylesheet" href="/ui/assets/styles.css?v=20260829-1">
-  <script src="/ui/assets/app.js?v=20260829-1" defer></script>
+  <link rel="stylesheet" href="/ui/assets/styles.css?v=20260831-1">
+  <script src="/ui/assets/app.js?v=20260831-1" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to main content</a>
@@ -120,7 +120,7 @@
   <template id="group-template"><article class="group-row"><span class="group-type"></span><div class="group-main"><strong></strong><small></small></div><div class="group-number"><strong></strong><small>MESSAGES</small></div><span class="group-pending"></span></article></template>
   <template id="delivery-template"><article class="delivery-row"><span class="delivery-status"></span><div><strong></strong><small></small></div></article></template>
   <template id="summary-template"><article class="summary-card"><header><div><span class="summary-type"></span><h2></h2></div><time></time></header><div class="summary-content"></div><footer></footer></article></template>
-  <template id="message-group-template"><article class="message-group-card"><header><div class="message-group-identity"><span class="message-group-type"></span><div><h2></h2><small>NEWEST FIRST</small></div></div><div class="message-group-count"><strong></strong><small>MESSAGES</small></div></header><div class="message-scroll" tabindex="0"><ol class="message-thread"></ol></div><footer></footer></article></template>
+  <template id="message-group-template"><details class="message-group-card"><summary class="message-group-summary"><div class="message-group-identity"><span class="message-group-type"></span><div><h2></h2><small>NEWEST FIRST</small></div></div><div class="message-group-count"><strong></strong><small>MESSAGES</small></div><span class="message-toggle"><span class="message-toggle-label">Open log</span><span class="message-toggle-icon" aria-hidden="true"></span></span></summary><div class="message-panel"><div class="message-scroll" tabindex="0"><ol class="message-thread"></ol></div><footer>Open this group to load its saved history</footer></div></details></template>
   <template id="qq-group-template"><article class="qq-group-option"><span class="activity-stem" aria-hidden="true"></span><label class="group-choice"><input class="group-enabled" type="checkbox"><span><strong></strong><small></small></span></label><time></time><label class="group-kind"><span>Summary style</span><select><option value="course">Course</option><option value="academic">Academic</option><option value="casual">Casual</option></select></label></article></template>
 </body>
 </html>

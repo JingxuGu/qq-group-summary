@@ -171,14 +171,24 @@ input::placeholder { color: #8da0ab; }
 .message-overview span { color: var(--muted); font-size: 11px; }
 .message-overview strong { font: 600 19px/1 var(--display); }
 .search-console { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 10px; margin: 24px 0 18px; padding: 12px; border: 1px solid var(--line); background: var(--paper-bright); }
-.message-board { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 18px; }
-.message-group-card { min-width: 0; border: 1px solid var(--line); background: var(--paper-bright); }
-.message-group-card > header { display: flex; justify-content: space-between; align-items: center; gap: 14px; padding: 18px 20px; border-bottom: 1px solid var(--line); }
+.message-board { display: grid; gap: 12px; }
+.message-group-card { min-width: 0; border: 1px solid var(--line); background: var(--paper-bright); transition: border-color .18s ease, box-shadow .18s ease; }
+.message-group-card[open] { border-color: var(--line-strong); box-shadow: 7px 7px 0 rgba(16,44,76,.035); }
+.message-group-summary { display: grid; grid-template-columns: minmax(0,1fr) auto auto; align-items: center; gap: 20px; min-height: 84px; padding: 16px 20px; cursor: pointer; list-style: none; transition: background-color .18s ease; }
+.message-group-summary::-webkit-details-marker { display: none; }
+.message-group-summary:hover { background: var(--blue-pale); }
+.message-group-summary:focus-visible { outline: 2px solid var(--blue); outline-offset: -3px; }
 .message-group-identity { min-width: 0; display: flex; align-items: center; gap: 12px; }
 .message-group-identity h2 { overflow: hidden; margin: 0 0 5px; font: 580 21px/1 var(--display); text-overflow: ellipsis; white-space: nowrap; }
 .message-group-identity small, .message-group-count small { color: var(--muted); font: 8px/1 var(--mono); letter-spacing: .08em; }
 .message-group-count { text-align: right; }
 .message-group-count strong { display: block; font: 600 24px/1 var(--display); }
+.message-toggle { display: inline-flex; align-items: center; gap: 10px; min-width: 84px; justify-content: flex-end; color: var(--blue); font: 650 9px/1 var(--mono); letter-spacing: .07em; text-transform: uppercase; }
+.message-toggle-icon { position: relative; width: 22px; height: 22px; border: 1px solid var(--line-strong); border-radius: 50%; background: var(--paper-bright); }
+.message-toggle-icon::before, .message-toggle-icon::after { position: absolute; top: 50%; left: 50%; width: 8px; height: 1px; background: currentColor; content: ""; transform: translate(-50%,-50%); transition: transform .18s ease; }
+.message-toggle-icon::after { transform: translate(-50%,-50%) rotate(90deg); }
+.message-group-card[open] .message-toggle-icon::after { transform: translate(-50%,-50%) rotate(0); }
+.message-panel { border-top: 1px solid var(--line); }
 .message-scroll { height: 420px; overflow-y: auto; scrollbar-color: var(--line-strong) transparent; scrollbar-width: thin; }
 .message-thread { margin: 0; padding: 0; list-style: none; }
 .message-entry { display: grid; grid-template-columns: 112px minmax(0,1fr); border-bottom: 1px solid var(--line); }
@@ -190,7 +200,7 @@ input::placeholder { color: #8da0ab; }
 .message-state { flex: 0 0 auto; color: var(--muted); font: 7px/1 var(--mono); letter-spacing: .07em; text-transform: uppercase; }
 .message-state.pending { color: #9c6400; }
 .message-state.summarized { color: var(--teal); }
-.message-group-card > footer { margin: 0; padding: 12px 20px; border-top: 1px solid var(--line); color: var(--muted); font: 8px/1 var(--mono); }
+.message-panel > footer { margin: 0; padding: 12px 20px; border-top: 1px solid var(--line); color: var(--muted); font: 8px/1 var(--mono); }
 
 .preference-card { display: grid; grid-template-columns: minmax(280px,.8fr) minmax(360px,1.2fr); gap: clamp(30px, 6vw, 90px); margin-top: 28px; padding: clamp(28px, 5vw, 62px); border: 1px solid var(--line-strong); background: var(--paper-bright); box-shadow: var(--shadow); }
 .preference-copy { position: relative; padding-left: 22px; border-left: 3px solid var(--blue); }
@@ -310,6 +320,11 @@ input::placeholder { color: #8da0ab; }
   .summary-toolbar select { min-width: 0; }
   .summary-card { padding: 19px; }
   .search-console { grid-template-columns: 1fr; }
+  .message-group-summary { grid-template-columns: minmax(0,1fr) auto; gap: 13px 16px; padding: 15px 16px; }
+  .message-group-identity { grid-column: 1 / -1; }
+  .message-group-count { display: flex; align-items: baseline; gap: 6px; text-align: left; }
+  .message-group-count strong { font-size: 20px; }
+  .message-toggle { min-width: 0; }
   .message-entry { grid-template-columns: 82px minmax(0,1fr); }
   .message-entry > time { padding-left: 11px; }
   .preference-card, .qq-connect-card { padding: 24px 19px; }
