@@ -1,69 +1,126 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#132a3a">
-  <title>QQ Group Summary</title><link rel="stylesheet" href="/ui/assets/styles.css?v=20260828-3"><script src="/ui/assets/app.js?v=20260828-3" defer></script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#102c4c">
+  <title>QQ Group Summary · Signal Desk</title>
+  <link rel="stylesheet" href="/ui/assets/styles.css?v=20260829-1">
+  <script src="/ui/assets/app.js?v=20260829-1" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to main content</a>
-  <div class="shell">
-    <aside class="brand-rail" aria-label="Application navigation">
-      <div><div class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></div><p class="eyebrow">QQ GROUP SUMMARY</p><h1>Group chat, distilled.</h1><p class="brand-note">Listen quietly. Deliver what matters.</p>
-        <nav class="side-nav" aria-label="Main navigation">
-          <button class="nav-item active" data-view="dashboard">Dashboard</button><button class="nav-item" data-view="summaries">Summaries</button><button class="nav-item" data-view="messages">Messages</button><button class="nav-item" data-view="email">Email</button><button class="nav-item" data-view="qq">Connect QQ</button>
-        </nav>
+  <div class="app-shell">
+    <aside class="station-rail" aria-label="Application navigation">
+      <div class="station-head">
+        <div class="brand-lockup">
+          <div class="brand-signal" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+          <div><p>QQ GROUP SUMMARY</p><strong>Signal Desk</strong></div>
+        </div>
+        <p class="station-purpose">A quiet listening post for the groups you cannot watch all day.</p>
       </div>
-      <div class="clock-block"><span>LOCAL TIME</span><time id="clock">--:--:--</time></div>
+
+      <nav class="station-nav" aria-label="Main navigation">
+        <button class="nav-item active" data-view="dashboard" aria-current="page"><span>LIVE</span><strong>Overview</strong></button>
+        <button class="nav-item" data-view="summaries"><span>BRIEF</span><strong>Summaries</strong></button>
+        <button class="nav-item" data-view="messages"><span>LOG</span><strong>Messages</strong></button>
+        <button class="nav-item" data-view="email"><span>MAIL</span><strong>Delivery</strong></button>
+        <button class="nav-item" data-view="qq"><span>LINK</span><strong>Connect QQ</strong></button>
+      </nav>
+
+      <div class="station-foot">
+        <div class="local-clock"><span>LOCAL / ASIA–SHANGHAI</span><time id="clock">--:--:--</time></div>
+        <p><i aria-hidden="true"></i> Local-first · Read-only</p>
+      </div>
     </aside>
+
     <main id="main">
       <section id="view-dashboard" class="view active-view">
-        <header class="topbar"><div><p class="section-label">System overview</p><h2>Message watch desk</h2></div><div class="service-state" id="service-state" role="status"><span class="state-dot"></span><span>Connecting</span></div></header>
-        <section class="signal-track" aria-labelledby="signal-title"><div class="track-heading"><div><p class="section-label">Message track</p><h3 id="signal-title">From group chat to inbox</h3></div><p id="last-refresh">Waiting for first refresh</p></div><div class="track" role="list">
-          <article class="track-stop active" role="listitem"><span class="track-index">IN</span><strong id="metric-received">—</strong><small>MESSAGES · 24H</small></article><article class="track-stop" role="listitem"><span class="track-index">QUEUE</span><strong id="metric-pending">—</strong><small>WAITING TO SUMMARIZE</small></article><article class="track-stop" role="listitem"><span class="track-index">SUM</span><strong id="metric-summaries">—</strong><small>SUMMARY BATCHES · 24H</small></article><article class="track-stop" role="listitem"><span class="track-index">MAIL</span><strong id="metric-delivery">—</strong><small>LATEST DELIVERY</small></article>
-        </div></section>
-        <div class="content-grid"><section class="panel groups-panel" aria-labelledby="groups-title"><div class="panel-heading"><div><p class="section-label">Listening scope</p><h3 id="groups-title">QQ groups</h3></div><span class="count-badge" id="group-count">0 groups</span></div><div class="group-list" id="group-list"><p class="empty-state">Loading groups…</p></div></section><section class="panel delivery-panel" aria-labelledby="delivery-title"><div class="panel-heading"><div><p class="section-label">Delivery log</p><h3 id="delivery-title">Recent digests</h3></div><span class="pending-note" id="pending-note">0 notices pending</span></div><div class="delivery-list" id="delivery-list"><p class="empty-state">No delivery records yet.</p></div></section></div>
+        <header class="view-header dashboard-header">
+          <div class="header-copy">
+            <p class="kicker"><span>Listening now</span> Message observatory</p>
+            <h1>What happened<br><em>while you were away.</em></h1>
+            <p class="lede">Your selected QQ groups flow into one calm daily brief. Nothing is posted back to QQ.</p>
+          </div>
+          <div class="service-state" id="service-state" role="status">
+            <span class="state-beacon" aria-hidden="true"></span>
+            <span><small>SERVER</small><strong>Connecting</strong></span>
+          </div>
+        </header>
+
+        <section class="signal-ledger" aria-labelledby="signal-title">
+          <div class="ledger-head">
+            <div><p class="kicker">Live processing path</p><h2 id="signal-title">Receive → distill → deliver</h2></div>
+            <p id="last-refresh">Waiting for first refresh</p>
+          </div>
+          <div class="signal-track" role="list">
+            <article class="track-stop active" role="listitem"><span class="track-node">IN</span><div><strong id="metric-received">—</strong><small>Messages today</small></div></article>
+            <article class="track-stop" role="listitem"><span class="track-node">Q</span><div><strong id="metric-pending">—</strong><small>Waiting in queue</small></div></article>
+            <article class="track-stop" role="listitem"><span class="track-node">Σ</span><div><strong id="metric-summaries">—</strong><small>Briefs created</small></div></article>
+            <article class="track-stop" role="listitem"><span class="track-node">↗</span><div><strong id="metric-delivery">—</strong><small>Latest delivery</small></div></article>
+          </div>
+        </section>
+
+        <div class="dashboard-grid">
+          <section class="work-panel groups-panel" aria-labelledby="groups-title">
+            <div class="panel-heading"><div><p class="kicker">Listening scope</p><h2 id="groups-title">Selected groups</h2></div><span class="count-badge" id="group-count">0 groups</span></div>
+            <div class="group-list" id="group-list"><p class="empty-state">Loading the group ledger…</p></div>
+          </section>
+          <section class="work-panel delivery-panel" aria-labelledby="delivery-title">
+            <div class="panel-heading"><div><p class="kicker">Dispatch history</p><h2 id="delivery-title">Recent digests</h2></div><span class="pending-note" id="pending-note">0 notices pending</span></div>
+            <div class="delivery-list" id="delivery-list"><p class="empty-state">No delivery records yet.</p></div>
+          </section>
+        </div>
       </section>
 
-      <section id="view-summaries" class="view" hidden><header class="topbar"><div><p class="section-label">Saved knowledge</p><h2>Summary archive</h2></div><div class="summary-toolbar"><p id="summary-run-message" role="status"></p><select id="summary-filter" aria-label="Filter summaries"><option value="">All group types</option><option value="course">Course</option><option value="academic">Academic</option><option value="casual">Casual</option></select><button id="summary-run" class="primary-button" type="button">Summarize now</button></div></header><div id="summary-list" class="summary-list"><p class="empty-state">Loading summaries…</p></div></section>
+      <section id="view-summaries" class="view" hidden>
+        <header class="view-header compact-header">
+          <div class="header-copy"><p class="kicker"><span>Brief archive</span> Saved knowledge</p><h1>Readable signal,<br><em>without the noise.</em></h1></div>
+          <div class="summary-toolbar"><p id="summary-run-message" role="status"></p><label class="select-wrap"><span class="sr-only">Filter summaries</span><select id="summary-filter"><option value="">All group types</option><option value="course">Course</option><option value="academic">Academic</option><option value="casual">Casual</option></select></label><button id="summary-run" class="primary-button" type="button">Summarize now</button></div>
+        </header>
+        <div id="summary-list" class="summary-list"><p class="empty-state">Loading the summary archive…</p></div>
+      </section>
 
-      <section id="view-messages" class="view" hidden><header class="topbar"><div><p class="section-label">Local database</p><h2>Message history</h2></div><div class="message-overview"><span class="privacy-note">Raw messages stay on this device</span><strong id="message-count">0 messages</strong></div></header><form id="message-search" class="search-bar"><label><span class="sr-only">Search messages</span><input id="message-query" type="search" placeholder="Search message text or sender across groups"></label><button class="primary-button" type="submit">Search</button></form><div id="message-groups" class="message-board"><p class="empty-state">Loading message history…</p></div></section>
+      <section id="view-messages" class="view" hidden>
+        <header class="view-header compact-header">
+          <div class="header-copy"><p class="kicker"><span>Local record</span> Message history</p><h1>The source log,<br><em>group by group.</em></h1></div>
+          <div class="message-overview"><span>Raw messages stay on this device</span><strong id="message-count">0 messages</strong></div>
+        </header>
+        <form id="message-search" class="search-console"><label><span class="sr-only">Search messages</span><input id="message-query" type="search" placeholder="Search message text or sender"></label><button class="primary-button" type="submit">Search the log</button></form>
+        <div id="message-groups" class="message-board"><p class="empty-state">Loading saved messages…</p></div>
+      </section>
 
-      <section id="view-email" class="view" hidden><header class="topbar"><div><p class="section-label">Subscription</p><h2>Daily email</h2></div></header><form id="email-form" class="preference-card"><div class="preference-copy"><p class="step-kicker">Your delivery</p><h3>Choose where and when the digest arrives</h3><p>The SMTP server and credentials remain developer-managed. This page only changes your recipient address and delivery time.</p></div><div class="form-grid"><label><span>Recipient email</span><input id="subscription-email" type="email" required></label><label><span>Daily delivery time</span><input id="subscription-time" type="time" required><small>Uses the timezone configured by the developer</small></label></div><div class="preference-actions"><p id="email-message" role="status"></p><button class="primary-button" type="submit">Save subscription</button></div></form></section>
+      <section id="view-email" class="view" hidden>
+        <header class="view-header compact-header"><div class="header-copy"><p class="kicker"><span>Daily dispatch</span> Email delivery</p><h1>One useful brief,<br><em>at the right time.</em></h1></div></header>
+        <form id="email-form" class="preference-card">
+          <div class="preference-copy"><span class="dispatch-stamp" aria-hidden="true">MAIL<br>OUT</span><p class="kicker">Your delivery</p><h2>Choose where the daily digest lands.</h2><p>Mail delivery is managed by the server. You only choose the recipient and the time that works for you.</p></div>
+          <div class="preference-controls"><div class="form-grid"><label><span>Recipient email</span><input id="subscription-email" type="email" autocomplete="email" required></label><label><span>Daily delivery time</span><input id="subscription-time" type="time" required><small>Uses the server timezone</small></label></div><div class="form-actions"><p id="email-message" role="status"></p><button class="primary-button" type="submit">Save delivery</button></div></div>
+        </form>
+      </section>
 
       <section id="view-qq" class="view" hidden>
-        <header class="topbar"><div><p class="section-label">Account connection</p><h2>Connect your QQ account</h2></div></header>
+        <header class="view-header compact-header"><div class="header-copy"><p class="kicker"><span>Private link</span> Connect your QQ account</p><h1>Connect once.<br><em>Keep listening.</em></h1></div></header>
         <div class="qq-connect-card">
-          <div class="qq-auth-visual">
-            <div class="qq-signal" id="qq-signal" aria-hidden="true"><span></span></div>
-            <figure class="qq-qr-ticket" id="qq-qr-ticket" hidden>
-              <span class="scan-corner top-left"></span><span class="scan-corner top-right"></span>
-              <img id="qq-qr-image" alt="QQ login QR code">
-              <span class="scan-corner bottom-left"></span><span class="scan-corner bottom-right"></span>
-              <figcaption>SCAN WITH QQ</figcaption>
-            </figure>
-          </div>
-          <div>
-            <p class="step-kicker">Private connection</p>
-            <h3 id="qq-title">Ready to connect</h3>
-            <p id="qq-description">Scan once with the QQ mobile app. This server will stay online and collect messages only from groups you choose.</p>
-            <div class="qq-connect-actions">
-              <button id="qq-connect" class="primary-button" type="button">Show login QR</button>
-              <button id="qq-refresh" class="text-button" type="button">Check connection</button>
-            </div>
-            <p class="qq-login-message" id="qq-login-message" role="status"></p>
-          </div>
+          <div class="qq-auth-visual"><div class="qq-signal" id="qq-signal" aria-hidden="true"><span></span></div><figure class="qq-qr-ticket" id="qq-qr-ticket" hidden><span class="scan-corner top-left"></span><span class="scan-corner top-right"></span><img id="qq-qr-image" alt="QQ login QR code"><span class="scan-corner bottom-left"></span><span class="scan-corner bottom-right"></span><figcaption>SCAN WITH QQ</figcaption></figure></div>
+          <div class="qq-connect-copy"><p class="kicker">Server-side session</p><h2 id="qq-title">Ready to connect</h2><p id="qq-description">Scan once with QQ on your phone. The server stays online and saves messages only from groups you choose.</p><div class="qq-connect-actions"><button id="qq-connect" class="primary-button" type="button">Show login QR</button><button id="qq-refresh" class="quiet-button" type="button">Check connection</button></div><p class="qq-login-message" id="qq-login-message" role="status"></p></div>
         </div>
-        <form id="qq-groups-form" class="qq-group-picker" hidden><div class="picker-heading"><div><p class="section-label">Activity ledger</p><h3>Choose groups to summarize</h3><p>Select the groups that matter and tell us how each one should be summarized. Groups are ordered by their latest observed message.</p></div><span id="qq-group-count" class="count-badge">0 groups</span></div><div id="qq-group-list" class="qq-group-list"><p class="empty-state">Waiting for your QQ group list…</p></div><div class="picker-actions"><p id="qq-groups-message" role="status"></p><button class="primary-button" type="submit">Save group choices</button></div></form>
-        <aside class="account-note"><strong>Read-only by design</strong><p>Only selected groups have their message content stored. Other groups contribute activity time only, so the list can stay useful without archiving their conversations.</p></aside>
+
+        <form id="qq-groups-form" class="qq-group-picker" hidden>
+          <div class="picker-heading"><div><p class="kicker">Activity ledger</p><h2>Choose groups to summarize</h2><p>Newest activity appears first. Select a group, then choose the kind of brief it needs.</p></div><span id="qq-group-count" class="count-badge">0 groups</span></div>
+          <div id="qq-group-list" class="qq-group-list"><p class="empty-state">Waiting for your QQ group list…</p></div>
+          <div class="picker-actions"><p id="qq-groups-message" role="status"></p><button class="primary-button" type="submit">Save group choices</button></div>
+        </form>
+        <aside class="privacy-callout"><span aria-hidden="true">01</span><div><strong>Read-only by design</strong><p>Selected groups store message content. Other groups contribute only their latest activity time, so they remain discoverable without being archived.</p></div></aside>
       </section>
 
-      <footer><span>Local-first dashboard · SQLite stays on this device</span><a href="/docs">API documentation</a></footer>
+      <footer class="app-footer"><span>Local-first · SQLite stays on this device</span><a href="/docs">Developer API</a></footer>
     </main>
   </div>
+
   <template id="group-template"><article class="group-row"><span class="group-type"></span><div class="group-main"><strong></strong><small></small></div><div class="group-number"><strong></strong><small>MESSAGES</small></div><span class="group-pending"></span></article></template>
   <template id="delivery-template"><article class="delivery-row"><span class="delivery-status"></span><div><strong></strong><small></small></div></article></template>
-  <template id="summary-template"><article class="summary-card"><header><div><span class="summary-type"></span><h3></h3></div><time></time></header><div class="summary-content"></div><footer></footer></article></template>
-  <template id="message-group-template"><article class="message-group-card"><header><div class="message-group-identity"><span class="message-group-type"></span><div><h3></h3><small>NEWEST FIRST</small></div></div><div class="message-group-count"><strong></strong><small>MESSAGES</small></div></header><div class="message-scroll" tabindex="0"><ol class="message-thread"></ol></div><footer></footer></article></template>
+  <template id="summary-template"><article class="summary-card"><header><div><span class="summary-type"></span><h2></h2></div><time></time></header><div class="summary-content"></div><footer></footer></article></template>
+  <template id="message-group-template"><article class="message-group-card"><header><div class="message-group-identity"><span class="message-group-type"></span><div><h2></h2><small>NEWEST FIRST</small></div></div><div class="message-group-count"><strong></strong><small>MESSAGES</small></div></header><div class="message-scroll" tabindex="0"><ol class="message-thread"></ol></div><footer></footer></article></template>
   <template id="qq-group-template"><article class="qq-group-option"><span class="activity-stem" aria-hidden="true"></span><label class="group-choice"><input class="group-enabled" type="checkbox"><span><strong></strong><small></small></span></label><time></time><label class="group-kind"><span>Summary style</span><select><option value="course">Course</option><option value="academic">Academic</option><option value="casual">Casual</option></select></label></article></template>
 </body>
 </html>
