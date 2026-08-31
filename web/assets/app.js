@@ -93,13 +93,26 @@ async function loadMessages() {
 }
 
 async function loadSubscription() { const response = await fetch('/api/v1/subscription', { cache: 'no-store' }); const data = await response.json(); $('subscription-email').value = data.email; $('subscription-time').value = data.daily_time }
+function filterQQGroups() {
+  const query = $('qq-group-query').value.trim().toLocaleLowerCase()
+  const rows = [...document.querySelectorAll('.qq-group-option')]
+  let visible = 0
+  rows.forEach((row) => {
+    const matches = !query || row.dataset.search.includes(query)
+    row.hidden = !matches
+    if (matches) visible += 1
+  })
+  $('qq-group-count').textContent = query ? `${visible} of ${rows.length} groups` : `${rows.length} ${rows.length === 1 ? 'group' : 'groups'}`
+  $('qq-group-search-empty').hidden = !query || visible > 0 || rows.length === 0
+}
+
 function renderQQGroups(groups) {
-  const list = $('qq-group-list'); list.replaceChildren(); $('qq-group-count').textContent = `${groups.length} ${groups.length === 1 ? 'group' : 'groups'}`
-  if (!groups.length) return empty(list, 'No groups found yet. Keep Koishi connected while the group list synchronizes.')
+  const list = $('qq-group-list'); list.replaceChildren(); $('qq-group-search-empty').hidden = true
+  if (!groups.length) { $('qq-group-count').textContent = '0 groups'; return empty(list, 'No groups found yet. Keep Koishi connected while the group list synchronizes.') }
   groups.forEach((group) => {
     const row = $('qq-group-template').content.firstElementChild.cloneNode(true)
     const enabled = row.querySelector('.group-enabled'); const select = row.querySelector('select')
-    row.dataset.groupId = group.qq_group_id; enabled.checked = group.enabled; select.value = group.type; select.disabled = !group.enabled
+    row.dataset.groupId = group.qq_group_id; row.dataset.search = `${group.name} ${group.qq_group_id}`.toLocaleLowerCase(); enabled.checked = group.enabled; select.value = group.type; select.disabled = !group.enabled
     row.classList.toggle('selected', group.enabled); row.classList.toggle('recent', Boolean(group.last_message_at))
     row.querySelector('.group-choice strong').textContent = group.name
     row.querySelector('.group-choice small').textContent = `QQ group ${group.qq_group_id}`
@@ -107,6 +120,7 @@ function renderQQGroups(groups) {
     enabled.addEventListener('change', () => { select.disabled = !enabled.checked; row.classList.toggle('selected', enabled.checked) })
     list.append(row)
   })
+  filterQQGroups()
 }
 async function loadQQGroups() {
   const response = await fetch('/api/v1/qq/groups', { cache: 'no-store' }); if (!response.ok) throw new Error('Could not load QQ groups')
@@ -135,7 +149,7 @@ async function loadQQStatus() {
 }
 
 document.querySelectorAll('.nav-item').forEach((button) => button.addEventListener('click', async () => { document.querySelectorAll('.nav-item').forEach((item) => { const active = item === button; item.classList.toggle('active', active); if (active) item.setAttribute('aria-current', 'page'); else item.removeAttribute('aria-current') }); document.querySelectorAll('.view').forEach((view) => { const active = view.id === `view-${button.dataset.view}`; view.hidden = !active; view.classList.toggle('active-view', active) }); if (button.dataset.view === 'summaries') await loadSummaries(); if (button.dataset.view === 'messages') await loadMessages(); if (button.dataset.view === 'email') await loadSubscription(); if (button.dataset.view === 'qq') await loadQQStatus() }))
-$('summary-filter').addEventListener('change', loadSummaries); $('message-search').addEventListener('submit', (event) => { event.preventDefault(); loadMessages() })
+$('summary-filter').addEventListener('change', loadSummaries); $('message-search').addEventListener('submit', (event) => { event.preventDefault(); loadMessages() }); $('qq-group-query').addEventListener('input', filterQQGroups)
 $('summary-run').addEventListener('click', async (event) => { const button = event.currentTarget; const message = $('summary-run-message'); button.disabled = true; button.textContent = 'Summarizing…'; message.textContent = 'Processing pending messages'; try { const response = await fetch('/api/v1/summaries/run', { method: 'POST' }); const data = await response.json(); if (!response.ok) throw new Error(data.detail || 'Could not generate summaries'); message.textContent = data.created ? `${data.created} ${data.created === 1 ? 'summary' : 'summaries'} created.` : 'Nothing new to summarize.'; await loadSummaries(); await refreshDashboard() } catch (error) { message.textContent = error.message } finally { button.disabled = false; button.textContent = 'Summarize now' } })
 $('email-form').addEventListener('submit', async (event) => { event.preventDefault(); const button = event.submitter; button.disabled = true; $('email-message').textContent = 'Sending confirmation…'; try { const response = await fetch('/api/v1/subscription', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: $('subscription-email').value.trim(), daily_time: $('subscription-time').value }) }); const data = await response.json(); if (!response.ok) throw new Error(data.detail || 'Could not save delivery'); $('email-message').textContent = 'Delivery saved. Check your inbox for the confirmation.' } catch (error) { $('email-message').textContent = error.message } finally { button.disabled = false } })
 $('qq-groups-form').addEventListener('submit', async (event) => { event.preventDefault(); const button = event.submitter; button.disabled = true; $('qq-groups-message').textContent = 'Saving…'; const groups = [...document.querySelectorAll('.qq-group-option')].filter((row) => row.querySelector('.group-enabled').checked).map((row) => ({ qq_group_id: row.dataset.groupId, type: row.querySelector('select').value })); try { const response = await fetch('/api/v1/qq/groups', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ groups }) }); const data = await response.json(); if (!response.ok) throw new Error(data.detail || 'Could not save group choices'); $('qq-groups-message').textContent = `${data.selected} ${data.selected === 1 ? 'group' : 'groups'} selected.`; await refreshDashboard() } catch (error) { $('qq-groups-message').textContent = error.message } finally { button.disabled = false } })

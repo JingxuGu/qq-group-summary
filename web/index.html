@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#102c4c">
   <title>QQ Group Summary · Signal Desk</title>
-  <link rel="stylesheet" href="/ui/assets/styles.css?v=20260831-1">
-  <script src="/ui/assets/app.js?v=20260831-1" defer></script>
+  <link rel="stylesheet" href="/ui/assets/styles.css?v=20260831-3">
+  <script src="/ui/assets/app.js?v=20260831-3" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to main content</a>
@@ -107,7 +107,9 @@
 
         <form id="qq-groups-form" class="qq-group-picker" hidden>
           <div class="picker-heading"><div><p class="kicker">Activity ledger</p><h2>Choose groups to summarize</h2><p>Newest activity appears first. Select a group, then choose the kind of brief it needs.</p></div><span id="qq-group-count" class="count-badge">0 groups</span></div>
-          <div id="qq-group-list" class="qq-group-list"><p class="empty-state">Waiting for your QQ group list…</p></div>
+          <label class="group-filter"><span>Find a group</span><input id="qq-group-query" type="search" placeholder="Search by group name or QQ number" autocomplete="off" spellcheck="false"><small>Filters this list instantly. Hidden selections stay selected.</small></label>
+          <div id="qq-group-list" class="qq-group-list" tabindex="0" aria-label="Available QQ groups"><p class="empty-state">Waiting for your QQ group list…</p></div>
+          <p id="qq-group-search-empty" class="empty-state group-search-empty" hidden>No groups match this search. Try a different name or QQ number.</p>
           <div class="picker-actions"><p id="qq-groups-message" role="status"></p><button class="primary-button" type="submit">Save group choices</button></div>
         </form>
         <aside class="privacy-callout"><span aria-hidden="true">01</span><div><strong>Read-only by design</strong><p>Selected groups store message content. Other groups contribute only their latest activity time, so they remain discoverable without being archived.</p></div></aside>
